@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>작업 기록</title>
+
+  <style>
+    /* ========== CSS: 화면 꾸미기 ========== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      background: #10141c;
+      color: #eef1f6;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app { width: 100%; max-width: 480px; padding: 20px; }
+
+    header { padding: 8px 0 20px; }
+    header h1 { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+    header p  { font-size: 13px; color: #8a93a6; margin-top: 4px; }
+
+    /* 화면 전환: .screen 중 .active만 보임 */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* 작업 유형 버튼 */
+    .work-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .work-btn {
+      padding: 34px 0;
+      font-size: 22px; font-weight: 700;
+      color: #eef1f6;
+      background: #1c2330;
+      border: 1px solid #2c3648;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+    .work-btn:active { background: #2f6df6; }
+
+    /* 진행중 카드 */
+    .running-card {
+      background: #1c2330;
+      border: 1px solid #2c3648;
+      border-radius: 16px;
+      padding: 36px 20px;
+      text-align: center;
+    }
+    .running-label { font-size: 15px; color: #57d364; }
+    .running-work  { font-size: 30px; font-weight: 700; margin: 10px 0 24px; }
+    #timer {
+      font-size: 56px; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+
+    /* 큰 실행 버튼 */
+    .big-btn {
+      width: 100%;
+      padding: 22px 0;
+      margin-top: 24px;
+      font-size: 22px; font-weight: 700;
+      color: #fff;
+      background: #e5484d;
+      border: none; border-radius: 14px;
+      cursor: pointer;
+    }
+    .big-btn.blue { background: #2f6df6; }
+    .big-btn:disabled { background: #3a4557; cursor: not-allowed; }
+
+    /* 물량 입력 숫자패드 */
+    #qtyDisplay {
+      font-size: 44px; font-weight: 700; text-align: center;
+      padding: 18px 0; margin-bottom: 14px;
+      background: #1c2330; border-radius: 14px;
+      min-height: 84px;
+    }
+    .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .pad button {
+      padding: 20px 0; font-size: 24px; font-weight: 600;
+      color: #eef1f6; background: #1c2330;
+      border: 1px solid #2c3648; border-radius: 12px; cursor: pointer;
+    }
+    .pad button:active { background: #2c3648; }
+
+    /* 오늘 기록 목록 */
+    h2 { font-size: 14px; color: #8a93a6; margin: 28px 0 10px; font-weight: 600; }
+    .log-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #171d28; border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 8px; font-size: 15px;
+    }
+    .log-item .time { color: #8a93a6; font-size: 13px; }
+    .log-item .qty  { font-weight: 700; color: #57d364; }
+    .empty { color: #566076; font-size: 14px; padding: 10px 2px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>작업 기록</h1>
+    <p id="today"></p>
+  </header>
+
+  <!-- 화면 1: 작업 선택 -->
+  <section id="screen-select" class="screen active">
+    <div class="work-grid">
+      <button class="work-btn" onclick="startWork('피킹')">피킹</button>
+      <button class="work-btn" onclick="startWork('입고')">입고</button>
+      <button class="work-btn" onclick="startWork('검수')">검수</button>
+      <button class="work-btn" onclick="startWork('상차')">상차</button>
+    </div>
+
+    <h2>오늘 기록</h2>
+    <div id="logList"></div>
+  </section>
+
+  <!-- 화면 2: 진행중 -->
+  <section id="screen-running" class="screen">
+    <div class="running-card">
+      <div class="running-label">● 진행중</div>
+      <div class="running-work" id="runningWork"></div>
+      <div id="timer">00:00:00</div>
+    </div>
+    <button class="big-btn" onclick="endWork()">작업 종료</button>
+  </section>
+
+  <!-- 화면 3: 물량 입력 -->
+  <section id="screen-qty" class="screen">
+    <h2 style="margin-top:0">완료 물량 입력 (박스)</h2>
+    <div id="qtyDisplay">0</div>
+    <div class="pad">
+      <button onclick="pressKey('7')">7</button>
+      <button onclick="pressKey('8')">8</button>
+      <button onclick="pressKey('9')">9</button>
+      <button onclick="pressKey('4')">4</button>
+      <button onclick="pressKey('5')">5</button>
+      <button onclick="pressKey('6')">6</button>
+      <button onclick="pressKey('1')">1</button>
+      <button onclick="pressKey('2')">2</button>
+      <button onclick="pressKey('3')">3</button>
+      <button onclick="pressKey('C')">C</button>
+      <button onclick="pressKey('0')">0</button>
+      <button onclick="pressKey('←')">←</button>
+    </div>
+    <!-- id="saveBtn": '저장 중...' 표시를 위해 필요 -->
+    <button id="saveBtn" class="big-btn blue" onclick="saveLog()">등록</button>
+  </section>
+
+</div>
+
+<script>
+/* ========== 설정 ========== */
+// Apps Script 웹앱 URL (배포 → 배포 관리에서 확인 가능)
+const API_URL = 'https://script.google.com/macros/s/AKfycbzW5qIX1t-J2z_fXbeWhRG4nmjOsvLURgmDdHHK3iGVOL8jKxVN4pdfD_wGbxXeQTQ/exec';
+
+/* ========== 상태 변수 ========== */
+let currentWork = null;    // 진행중인 작업명
+let startTime   = null;    // 시작 시각
+let timerId     = null;    // 타이머 ID
+let qtyStr      = "0";     // 입력 중인 물량
+
+/* ========== 화면 전환 ========== */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ========== 작업 시작 ========== */
+function startWork(workName) {
+  currentWork = workName;
+  startTime   = new Date();
+  document.getElementById('runningWork').textContent = workName;
+  showScreen('screen-running');
+
+  timerId = setInterval(updateTimer, 1000);   // 1초마다 갱신
+  updateTimer();
+}
+
+/* ========== 경과 시간 표시 ========== */
+function updateTimer() {
+  const sec = Math.floor((new Date() - startTime) / 1000);
+  const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+  const m = String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+}
+
+/* ========== 작업 종료 → 물량 입력 ========== */
+function endWork() {
+  clearInterval(timerId);
+  qtyStr = "0";
+  document.getElementById('qtyDisplay').textContent = "0";
+  showScreen('screen-qty');
+}
+
+/* ========== 숫자패드 ========== */
+function pressKey(key) {
+  if (key === 'C')      qtyStr = "0";
+  else if (key === '←') qtyStr = qtyStr.slice(0, -1) || "0";
+  else if (qtyStr === "0") qtyStr = key;
+  else if (qtyStr.length < 5) qtyStr += key;
+  document.getElementById('qtyDisplay').textContent = qtyStr;
+}
+
+/* ========== 기록 저장 ========== */
+function saveLog() {
+  // [미션2] 물량이 0이면 등록 차단
+  if (Number(qtyStr) === 0) {
+    alert('물량을 입력하세요');
+    return;                       // 여기서 함수 종료
+  }
+
+  const endTime = new Date();
+  const log = {
+    work:  currentWork,
+    start: startTime.toISOString(),
+    end:   endTime.toISOString(),
+    qty:   Number(qtyStr),
+    durationSec: Math.round((endTime - startTime) / 1000)   // [미션1] 초 단위 저장
+  };
+
+  // 브라우저 저장 (오프라인 백업용)
+  const logs = JSON.parse(localStorage.getItem('workLogs') || '[]');
+  logs.push(log);
+  localStorage.setItem('workLogs', JSON.stringify(logs));
+
+  // [미션3] 전송 중에는 버튼을 '저장 중...'으로 바꾸고 잠금
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+
+  // 구글 시트로 전송
+  fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify(log)
+  }).finally(() => {              // 성공/실패 관계없이 버튼 복구
+    btn.textContent = '등록';
+    btn.disabled = false;
+  });
+
+  currentWork = null;
+  renderLogs();
+  showScreen('screen-select');
+}
+
+/* ========== 오늘 기록 목록 ========== */
+function renderLogs() {
+  const logs = JSON.parse(localStorage.getItem('workLogs') || '[]');
+  const todayStr = new Date().toDateString();
+  const todayLogs = logs.filter(l => new Date(l.start).toDateString() === todayStr);
+
+  const box = document.getElementById('logList');
+  if (todayLogs.length === 0) {
+    box.innerHTML = '<div class="empty">아직 기록이 없습니다. 작업을 선택해 시작하세요.</div>';
+    return;
+  }
+
+  box.innerHTML = todayLogs.slice().reverse().map(l => {
+    const t1 = new Date(l.start).toTimeString().slice(0, 5);
+    const t2 = new Date(l.end).toTimeString().slice(0, 5);
+    // [미션1] 60초 미만은 '초', 넘으면 '분'으로 표시
+    const sec = l.durationSec ?? 0;
+    const dur = sec < 60 ? `${sec}초` : `${Math.floor(sec / 60)}분`;
+    return `<div class="log-item">
+              <div>
+                <div>${l.work} · ${dur}</div>
+                <div class="time">${t1} ~ ${t2}</div>
+              </div>
+              <div class="qty">${l.qty}박스</div>
+            </div>`;
+  }).join('');
+}
+
+/* ========== 첫 실행 ========== */
+document.getElementById('today').textContent =
+  new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+renderLogs();
+</script>
+</body>
+</html>
