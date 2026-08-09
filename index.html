@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>작업 기록</title>
 
+  <!-- ===== PWA 설정 (3주차 추가) ===== -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#10141c">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
   <style>
     /* ========== CSS: 화면 꾸미기 ========== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -281,6 +287,16 @@ function renderLogs() {
 document.getElementById('today').textContent =
   new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
 renderLogs();
+
+/* ========== 서비스 워커 등록 (3주차 추가) ==========
+   sw.js를 브라우저에 등록해야 오프라인 동작 + 홈 화면 설치가 가능합니다. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('서비스 워커 등록 완료'))
+      .catch((err) => console.log('서비스 워커 등록 실패:', err));
+  });
+}
 </script>
 </body>
 </html>
