@@ -1,6 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+
+  <!-- 화면 0 : 최초 사용자 설정 -->
+    
+    <section id="screen-profile" class="screen">
+    
+      <h2 style="margin-top:0">초기 설정</h2>
+    
+      <input id="dcInput"
+             class="profile-input"
+             placeholder="직매장">
+    
+      <input id="workerInput"
+             class="profile-input"
+             placeholder="이름">
+    
+      <input id="roleInput"
+             class="profile-input"
+             placeholder="직무">
+    
+      <input id="shiftInput"
+             class="profile-input"
+             placeholder="조">
+    
+      <button class="big-btn blue"
+              onclick="saveProfile()">
+    
+        저장
+    
+      </button>
+    
+    </section>
+  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>작업 기록</title>
@@ -102,15 +134,52 @@
     .log-item .time { color: #8a93a6; font-size: 13px; }
     .log-item .qty  { font-weight: 700; color: #57d364; }
     .empty { color: #566076; font-size: 14px; padding: 10px 2px; }
+  
+  profile-input{
+  width:100%;
+  padding:16px;
+  margin-bottom:12px;
+
+  background:#1c2330;
+  color:#eef1f6;
+
+  border:1px solid #2c3648;
+  border-radius:10px;
+
+  font-size:16px;
+}
+  
+  
   </style>
 </head>
 <body>
 <div class="app">
 
-  <header>
-    <h1>작업 기록</h1>
-    <p id="today"></p>
-  </header>
+ <header>
+
+  <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;">
+
+      <h1>작업 기록</h1>
+
+      <button
+        onclick="editProfile()"
+        style="
+          background:#1c2330;
+          color:#fff;
+          border:none;
+          padding:8px 12px;
+          border-radius:8px;">
+        설정
+      </button>
+
+  </div>
+
+  <p id="today"></p>
+
+</header>
 
   <!-- 화면 1: 작업 선택 -->
   <section id="screen-select" class="screen active">
@@ -169,6 +238,7 @@ let currentWork = null;    // 진행중인 작업명
 let startTime   = null;    // 시작 시각
 let timerId     = null;    // 타이머 ID
 let qtyStr      = "0";     // 입력 중인 물량
+let userProfile = null;
 
 /* ========== 화면 전환 ========== */
 function showScreen(id) {
@@ -222,13 +292,35 @@ function saveLog() {
   }
 
   const endTime = new Date();
-  const log = {
-    work:  currentWork,
-    start: startTime.toISOString(),
-    end:   endTime.toISOString(),
-    qty:   Number(qtyStr),
-    durationSec: Math.round((endTime - startTime) / 1000)   // [미션1] 초 단위 저장
-  };
+  const profile =
+JSON.parse(
+  localStorage.getItem('userProfile')
+);
+
+const log = {
+
+  dc:
+    profile?.dc || '',
+  worker:
+    profile?.worker || '',
+  role:
+    profile?.role || '',
+  shift:
+    profile?.shift || '',
+  work:
+    currentWork,
+  start:
+    startTime.toISOString(),
+  end:
+    endTime.toISOString(),
+  qty:
+    Number(qtyStr),
+  durationSec:
+    Math.round(
+      (endTime - startTime)/1000
+    )
+
+};
 
   // 브라우저 저장 (오프라인 백업용)
   const logs = JSON.parse(localStorage.getItem('workLogs') || '[]');
@@ -283,6 +375,30 @@ function renderLogs() {
   }).join('');
 }
 
+  function editProfile(){
+
+  const profile = JSON.parse(
+    localStorage.getItem('userProfile')
+  );
+
+  if(profile){
+
+    document.getElementById('dcInput').value =
+      profile.dc || '';
+
+    document.getElementById('workerInput').value =
+      profile.worker || '';
+
+    document.getElementById('roleInput').value =
+      profile.role || '';
+
+    document.getElementById('shiftInput').value =
+      profile.shift || '';
+  }
+
+  showScreen('screen-profile');
+}
+
 /* ========== 첫 실행 ========== */
 document.getElementById('today').textContent =
   new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
@@ -300,4 +416,5 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+
 
