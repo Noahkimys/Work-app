@@ -1,38 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-
-  <!-- 화면 0 : 최초 사용자 설정 -->
-    
-    <section id="screen-profile" class="screen">
-    
-      <h2 style="margin-top:0">초기 설정</h2>
-    
-      <input id="dcInput"
-             class="profile-input"
-             placeholder="직매장">
-    
-      <input id="workerInput"
-             class="profile-input"
-             placeholder="이름">
-    
-      <input id="roleInput"
-             class="profile-input"
-             placeholder="직무">
-    
-      <input id="shiftInput"
-             class="profile-input"
-             placeholder="조">
-    
-      <button class="big-btn blue"
-              onclick="saveProfile()">
-    
-        저장
-    
-      </button>
-    
-    </section>
-  
+<head>  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>작업 기록</title>
@@ -149,7 +117,6 @@
 
   font-size:16px;
 }
-``
   
   </style>
 </head>
@@ -411,7 +378,49 @@ function renderLogs() {
             </div>`;
   }).join('');
 }
+function saveProfile(){
 
+  const dc =
+    document.getElementById('dcInput')
+      .value.trim();
+
+  const worker =
+    document.getElementById('workerInput')
+      .value.trim();
+
+  const role =
+    document.getElementById('roleInput')
+      .value.trim();
+
+  const shift =
+    document.getElementById('shiftInput')
+      .value.trim();
+
+  if(!dc || !worker){
+
+    alert(
+      '직매장과 이름은 필수입니다.'
+    );
+
+    return;
+  }
+
+  userProfile = {
+
+    dc,
+    worker,
+    role,
+    shift
+
+  };
+
+  localStorage.setItem(
+    'userProfile',
+    JSON.stringify(userProfile)
+  );
+
+  showScreen('screen-select');
+}
   function editProfile(){
 
   const profile = JSON.parse(
@@ -438,7 +447,35 @@ function renderLogs() {
 
 /* ========== 첫 실행 ========== */
 document.getElementById('today').textContent =
-  new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+  new Date().toLocaleDateString(
+      'ko-KR',
+      {
+        year:'numeric',
+        month:'long',
+        day:'numeric',
+        weekday:'long'
+      }
+  );
+
+const profile =
+JSON.parse(
+  localStorage.getItem(
+    'userProfile'
+  )
+);
+
+if(profile){
+
+  userProfile = profile;
+
+  showScreen('screen-select');
+
+}else{
+
+  showScreen('screen-profile');
+
+}
+
 renderLogs();
 
 /* ========== 서비스 워커 등록 (3주차 추가) ==========
