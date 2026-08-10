@@ -4,7 +4,7 @@
    코드를 수정했는데 화면이 안 바뀌면 아래 CACHE_NAME의 v1 → v2로 올리세요.
 */
 
-const CACHE_NAME = 'work-log-v1';
+const CACHE_NAME = 'work-log-v2';
 
 // 미리 저장해둘 파일 목록
 const FILES = [
